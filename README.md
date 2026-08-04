@@ -42,14 +42,4 @@ El perímetro digital está fortificado para proteger desde bóvedas de credenci
 * **🌐 Acceso Global Seguro:** Implementación de mallas VPN privadas mediante **Tailscale**. El servidor es accesible de forma segura desde cualquier parte del mundo sin necesidad de realizar apertura de puertos (*Port-Forwarding*), volviéndolo invisible ante escaneos de puertos públicos en la WAN.
 * **🔑 Criptografía al Vuelo:** Sincronización continua hacia la nube de volúmenes de datos sensibles mediante encriptación en tiempo real en el cliente, previniendo el análisis automatizado o bloqueo de archivos por proveedores externos de almacenamiento.
 
-## 📂 Arquitectura de Archivos Sugerida
 
-```text
-├── 📁 docker/               # Docker Compose y archivos .env por servicio
-│   ├── docker-compose.yml   # Orquestador principal de los +30 contenedores
-│   └── 📁 configs/          # Volúmenes de Home Assistant, Pi-hole, Nextcloud, etc.
-├── 📁 scripts/              # Automatización nativa
-│   ├── network-daemon.sh    # Demonio de monitoreo de red /sys/ y nmcli
-│   └── backup-nightly.sh    # Script de git automático y Rclone criptográfico
-├── 📁 CAD/                  # Modelos paramétricos 3D (.STEP / .3MF)
-└── 📄 README.md             # Documentación principal del sistema
