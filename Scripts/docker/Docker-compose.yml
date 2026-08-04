@@ -1,0 +1,399 @@
+```yaml
+# ==========================================
+# CYBERDECK & NAS - DOCKER COMPOSE MAESTRO
+# ==========================================
+
+services:
+
+  # 1. EL CEREBRO DOMÓTICO
+  homeassistant:
+    container_name: homeassistant
+    image: ghcr.io/home-assistant/home-assistant:stable
+    network_mode: host
+    environment:
+      - TZ=America/Mexico_City
+    volumes:
+      - /mnt/ssd/docker/homeassistant/config:/config
+    restart: unless-stopped
+
+  # 2. SINCRONIZACIÓN ACADÉMICA
+  syncthing:
+    container_name: syncthing
+    image: lscr.io/linuxserver/syncthing:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Mexico_City
+    volumes:
+      - /mnt/ssd/docker/syncthing/config:/config
+      - /home/jc2/Escola:/sync
+      - /home/jc2/Robin:/robin
+      - /home/jc2/Arduino/Projects:/arduino_projects
+    ports:
+      - 8384:8384
+      - 22000:22000/tcp
+      - 22000:22000/udp
+      - 21027:21027/udp
+    restart: unless-stopped
+
+  # 3. EL CENTRO MULTIMEDIA (Acelerado por Hardware)
+  jellyfin:
+    container_name: jellyfin
+    image: lscr.io/linuxserver/jellyfin:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Mexico_City
+    volumes:
+      - /mnt/ssd/docker/jellyfin/config:/config
+      - /mnt/ssd/media:/data/media
+    ports:
+      - 8096:8096
+    devices:
+      - /dev/dri:/dev/dri
+    restart: unless-stopped
+
+  # 4. EL MOTOR DE DESCARGAS
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Mexico_City
+      - WEBUI_PORT=8081
+    ports:
+      - 8081:8081
+      - 6881:6881
+      - 6881:6881/udp
+    volumes:
+      - /mnt/ssd/docker/qbittorrent:/config
+      - /mnt/ssd/media:/data/media
+    restart: unless-stopped
+
+  # 5. AUTOMATIZACIÓN DE PELÍCULAS
+  radarr:
+    container_name: radarr
+    image: lscr.io/linuxserver/radarr:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Mexico_City
+    volumes:
+      - /mnt/ssd/docker/radarr/config:/config
+      - /mnt/ssd/media:/data/media
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+
+  # 6. AUTOMATIZACIÓN DE SERIES
+  sonarr:
+    container_name: sonarr
+    image: lscr.io/linuxserver/sonarr:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Mexico_City
+    volumes:
+      - /mnt/ssd/docker/sonarr/config:/config
+      - /mnt/ssd/media:/data/media
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+
+  # 7. EL BOT DE TELEGRAM
+  requestrr:
+    container_name: requestrr
+    image: lscr.io/linuxserver/requestrr:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Mexico_City
+    volumes:
+      - /mnt/ssd/docker/requestrr/config:/config
+    ports:
+      - 4545:4545
+    restart: unless-stopped
+
+  # 8. MODO GAMING (Servidor PaperMC + Geyser Crossplay)
+  minecraft_server:
+    container_name: minecraft_server
+    image: itzg/minecraft-server:latest
+    profiles: ["manual"]
+    environment:
+      - TYPE=PAPER
+      - EULA=TRUE
+      - VERSION=LATEST
+      - MEMORY=5632M
+      - TZ=America/Mexico_City
+      - ONLINE_MODE=FALSE
+    volumes:
+      - /mnt/ssd/docker/minecraft/data:/data
+    ports:
+      - 25565:25565/tcp
+      - 19132:19132/udp
+
+  # 9. LA NUBE PERSONAL Y RESPALDO DE DATOS
+  nextcloud_db:
+    image: mariadb:10.6
+    container_name: nextcloud_db
+    restart: always
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    volumes:
+      - /mnt/ssd/docker/nextcloud/db:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASS}
+      - MYSQL_PASSWORD=${DB_NEXTCLOUD_PASS}
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+
+  nextcloud:
+    container_name: nextcloud
+    image: lscr.io/linuxserver/nextcloud:latest
+    restart: unless-stopped
+    depends_on:
+      - nextcloud_db
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Mexico_City
+    volumes:
+      - /mnt/ssd/docker/nextcloud/config:/config
+      - /mnt/ssd/nextcloud_data:/data
+    ports:
+      - 8080:443
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+
+  # 10. EL CENTRO DE COMANDO VISUAL
+  portainer:
+    container_name: portainer
+    image: portainer/portainer-ce:latest
+    ports:
+      - 9000:9000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /mnt/ssd/docker/portainer/data:/data
+    restart: unless-stopped
+
+  # 11. EL BUSCADOR MAESTRO DE TORRENTS
+  prowlarr:
+    container_name: prowlarr
+    image: lscr.io/linuxserver/prowlarr:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Mexico_City
+    volumes:
+      - /mnt/ssd/docker/prowlarr/config:/config
+    ports:
+      - 9696:9696
+    restart: unless-stopped
+
+  # 12. EL CAZADOR DE SUBTÍTULOS
+  bazarr:
+    container_name: bazarr
+    image: lscr.io/linuxserver/bazarr:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Mexico_City
+    volumes:
+      - /mnt/ssd/docker/bazarr/config:/config
+      - /mnt/ssd/media:/data/media
+    ports:
+      - 6767:6767
+    restart: unless-stopped
+
+  # 13. EL DASHBOARD (TU PORTAL DE INICIO)
+  heimdall:
+    container_name: heimdall
+    image: lscr.io/linuxserver/heimdall:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Mexico_City
+    volumes:
+      - /mnt/ssd/docker/heimdall/config:/config
+    ports:
+      - 80:80 
+    restart: unless-stopped
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - TZ=America/Mexico_City
+    ports:
+      - 8191:8191
+    restart: unless-stopped
+
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    ports:
+      - "192.168.1.200:53:53/tcp"  
+      - "192.168.1.200:53:53/udp"
+      - "100.117.198.57:53:53/tcp"     
+      - "100.117.198.57:53:53/udp"
+      - "8088:80/tcp"
+    environment:
+      - TZ=America/Mexico_City
+      - WEBPASSWORD=${PIHOLE_PASS}
+    volumes:
+      - /mnt/ssd/docker/pihole/etc-pihole:/etc/pihole
+      - /mnt/ssd/docker/pihole/etc-dnsmasq.d:/etc/dnsmasq.d
+    restart: unless-stopped
+      
+  kiwix:
+    image: ghcr.io/kiwix/kiwix-serve:latest
+    container_name: kiwix-server
+    volumes:
+      - /home/jc2/kiwix_data:/data
+    ports:
+      - "8085:8080"
+    command: 
+      - "--library"
+      - "library.xml"
+    restart: unless-stopped
+
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Mexico_City
+    volumes:
+      - /mnt/ssd/docker/lidarr/config:/config
+      - /mnt/ssd/media:/data/media
+    ports:
+      - "8686:8686"
+    restart: unless-stopped
+
+  calibre-web:
+    image: lscr.io/linuxserver/calibre-web:latest
+    container_name: calibre-web
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Mexico_City
+      - DOCKER_MODS=linuxserver/mods:universal-calibre
+    volumes:
+      - /mnt/ssd/docker/calibre-web/config:/config
+      - /mnt/ssd/media/books:/books
+    ports:
+      - "8083:8083"
+    restart: unless-stopped
+
+  # 14. EL TALLER ELECTRÓNICO (Programación de ESP32)
+  esphome:
+    container_name: esphome
+    image: ghcr.io/esphome/esphome
+    volumes:
+      - /mnt/ssd/docker/esphome/config:/config
+      - esphome_build_cache:/config/.esphome
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+    privileged: true
+    network_mode: host
+
+  # 15. EL VIGILANTE DE ACTUALIZACIONES
+  watchtower:
+    container_name: watchtower
+    image: containrrr/watchtower:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - TZ=America/Mexico_City
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_SCHEDULE=0 0 4 * * *
+    restart: unless-stopped
+
+  # 16. LA INTERFAZ NEURAL DE BABY JARVIS
+  lobechat:
+    image: lobehub/lobe-chat:latest
+    container_name: lobechat
+    environment:
+      - TZ=America/Mexico_City
+      - OPENAI_API_KEY=sk-babyjarvis-override
+      - OPENAI_PROXY_URL=http://192.168.1.200:5000/v1
+      - CUSTOM_MODELS=-all,+qwen2.5:1.5b,+qwen2.5:14b,+gemini-1.5-flash
+      - FEATURE_FLAGS="-changelog,-welcome_suggest"
+    ports:
+      - "3210:3210"
+    restart: unless-stopped
+
+  # ==========================================
+  # 17. PROYECTO PRAGMATA (IMPRESIÓN 3D)
+  # ==========================================
+  pragmata_db:
+    image: mariadb:10.11
+    container_name: pragmata_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: (JC2)^-1 
+      MYSQL_DATABASE: pragmata_erp
+      MYSQL_USER: diana_bot
+      MYSQL_PASSWORD: (JC2)^-1 
+    ports:
+      - "3306:3306" # Expuesto a Tailscale
+    volumes:
+      - /mnt/ssd/docker/pragmata/mysql_data:/var/lib/mysql
+
+  pragmata_adminer:
+    image: adminer
+    container_name: pragmata_adminer
+    restart: unless-stopped
+    ports:
+      - "8082:8080" # Modificado para no chocar con qBittorrent (8081)
+    depends_on:
+      - pragmata_db
+
+  pragmata_dashboard:
+    image: metabase/metabase:latest
+    container_name: pragmata_dashboard
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - pragmata_db
+    volumes:
+      - /mnt/ssd/docker/pragmata/metabase_data:/metabase.db
+
+  pragmata_grafana:
+    image: grafana/grafana-oss:latest
+    container_name: pragmata_grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000" 
+    depends_on:
+      - pragmata_db
+    volumes:
+      - /mnt/ssd/docker/pragmata/grafana_data:/var/lib/grafana
+
+  pragmata_calculator:
+    image: python:3.11-slim
+    container_name: pragmata_calculator
+    restart: unless-stopped
+    command: sh -c "pip install streamlit pymysql pandas && streamlit run /app/app.py --server.port=8501 --server.address=0.0.0.0"
+    ports:
+      - "8501:8501"
+    depends_on:
+      - pragmata_db
+    volumes:
+      - /mnt/ssd/docker/pragmata/calculator:/app
+
+  pragmata_bot:
+    image: python:3.11-slim
+    container_name: pragmata_bot
+    restart: unless-stopped
+    command: sh -c "pip install pyTelegramBotAPI pymysql paho-mqtt && python /app/puente_diana.py"
+    depends_on:
+      - pragmata_db
+    volumes:
+      - /mnt/ssd/docker/pragmata/calculator:/app
+
+volumes:
+  esphome_build_cach
