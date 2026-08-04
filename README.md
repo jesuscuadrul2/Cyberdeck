@@ -1,43 +1,55 @@
-Cyberdeck: Servidor Táctico de Taller y Nodo IoT
-Arquitectura 24/7 | Edge Computing | Zero-Trust Networking | Automatización Bash
+# ⚡ Cyberdeck: Servidor Edge 24/7 y Orquestador IoT Táctico
 
+![Raspberry Pi](https://img.shields.io/badge/-Raspberry_Pi_5-C51A4A?style=for-the-badge&logo=Raspberry-Pi&logoColor=white)
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+![Bash](https://img.shields.io/badge/bash-%234EAA25.svg?style=for-the-badge&logo=gnu-bash&logoColor=white)
+![Tailscale](https://img.shields.io/badge/Tailscale-ff5f5f?style=for-the-badge&logo=tailscale&logoColor=white)
+![Home Assistant](https://img.shields.io/badge/home%20assistant-%2341BDF5.svg?style=for-the-badge&logo=home-assistant&logoColor=white)
 
-Visión General
-El Cyberdeck es el cerebro central de mi ecosistema de hardware. Diseñado desde cero como una solución de infraestructura local continua (operando 24/7 desde abril de 2026), este servidor portátil orquesta la domótica del taller, aloja servicios de gestión de datos, y actúa como puente seguro hacia el exterior sin comprometer la privacidad. Es un sistema altamente replicable gracias a sus rutinas de respaldo automatizadas en la nube.
+El **Cyberdeck** es el cerebro central e infraestructura Edge de mi ecosistema de hardware. Diseñado y ensamblado desde cero como una solución de cómputo continuo local (operando ininterrumpidamente 24/7 desde abril de 2026), este servidor portátil orquesta la domótica del taller, gestiona bases de datos masivas, aloja modelos de lenguaje (LLMs) locales y actúa como una pasarela segura Zero-Trust sin comprometer la privacidad.
 
+## 🚀 Visión General de la Infraestructura
 
-Diseño de Hardware, Manufactura y Almacenamiento
-La carcasa no es comercial; fue diseñada paramétricamente en Fusion 360 para cumplir con tolerancias térmicas estrictas y portabilidad.
+Para maximizar el silicio en un hardware de bajo consumo, el sistema implementa estrategias de optimización de grado industrial, permitiendo la ejecución simultánea de **más de 30 contenedores Docker** (incluyendo Home Assistant, Nextcloud, LobeChat, Pi-hole y *Pragmata*, un ERP completo para manufactura aditiva).
 
+## 🛠️ Especificaciones de Hardware y Manufactura
 
-Core Computacional: Raspberry Pi 5 (8GB RAM).
+El chasis del dispositivo no es comercial; fue diseñado paramétricamente desde cero para cumplir con tolerancias térmicas estrictas, portabilidad y resistencia en entornos de taller.
 
+* **🧠 Core Computacional:** Raspberry Pi 5 (8GB RAM).
+* **🔋 Autonomía Energética:** Integración de un módulo UPS Geekworm X1202, garantizando más de **2 horas de autonomía** bajo uso intensivo para mitigar picos de tensión y prevenir la corrupción de datos.
+* **💽 Almacenamiento Desacoplado (Wear-Leveling):** * *Sistema Operativo:* MicroSD de alta velocidad para lectura.
+    * *Datos e Ingesta:* SSD externo de 2.5" dedicado exclusivamente al motor Docker, bases de datos (MariaDB/Postgres) y modelos de IA, previniendo la degradación del almacenamiento por ciclos intensivos de escritura.
+* **📐 Manufactura Aditiva:** Chasis híbrido impreso en 3D optimizado para el ecosistema Bambu Lab, combinando **PETG translúcido** para la rigidez estructural y disipación térmica, junto con **TPU** para la absorción de impactos mecánicos.
 
-Autonomía Energética: Integración de módulo UPS Geekworm X1202, garantizando más de 2 horas de autonomía bajo cargas intensivas para evitar corrupción de bases de datos ante cortes eléctricos.
+## ⚙️ Automatización y Orquestación Nativa (DevOps Local)
 
+### 🛰️ Script Network-Daemon (Bash Core)
+Desarrollé un demonio en Bash corriendo en segundo plano que monitoriza el estado físico de la red a bajo nivel mediante `/sys/class/net/eth0/carrier`:
+* **Modo Estacionario (RJ45 Detectado):** Configura IPs estáticas mediante `nmcli`, levanta la flota completa de microservicios y monta unidades criptográficas remotas vía `Rclone`.
+* **Modo Nómada (Solo Wi-Fi o Desconectado):** Conmuta automáticamente a DHCP e ingresa en un modo de ahorro energético, hibernando contenedores no críticos para extender la autonomía de la UPS.
 
-Arquitectura de Almacenamiento Desacoplada: Para evitar la fragmentación y el desgaste por ciclos de escritura (wear-leveling), el Sistema Operativo reside en una MicroSD, mientras que el motor Docker, las bases de datos (MariaDB/Postgres) y los modelos de lenguaje (LLMs) operan desde un SSD de 2.5" externo.
+### 🔌 Activación por Red (Socket Activation)
+Para mitigar el *overhead* de la memoria RAM, los servicios de menor concurrencia permanecen suspendidos en el *kernel* y se inicializan bajo demanda únicamente cuando se detecta un *trigger* o petición entrante en sus puertos asignados.
 
+### 🔄 Respaldo Automatizado e Infraestructura como Código (IaC)
+Rutinas nocturnas automatizadas (*cron jobs*) rastrean cambios en los archivos de configuración de Docker, entornos virtuales y configuraciones críticas de red, ejecutando *commits* y `git push` silenciosos a repositorios privados para garantizar que el servidor sea 100% replicable ante un fallo catastrófico de hardware.
 
-Manufactura Aditiva: Chasis fabricado combinando PETG translúcido para la rigidez estructural y TPU para la amortiguación de impactos, optimizado para el ecosistema Bambu Lab.
+## 🔐 Ciberseguridad y Redes Zero-Trust
 
+El perímetro digital está fortificado para proteger desde bóvedas de credenciales locales hasta la telemetría del ecosistema robótico:
 
-Orquestación de Software y Scripts Nativos
-Maximizar el silicio en hardware de bajo consumo requiere estrategias de optimización de grado industrial. El sistema gestiona simultáneamente más de 30 contenedores (incluyendo Home Assistant, Nextcloud, LobeChat, Pi-hole y un ERP completo para impresión 3D llamado Pragmata).
+* **🌐 Acceso Global Seguro:** Implementación de mallas VPN privadas mediante **Tailscale**. El servidor es accesible de forma segura desde cualquier parte del mundo sin necesidad de realizar apertura de puertos (*Port-Forwarding*), volviéndolo invisible ante escaneos de puertos públicos en la WAN.
+* **🔑 Criptografía al Vuelo:** Sincronización continua hacia la nube de volúmenes de datos sensibles mediante encriptación en tiempo real en el cliente, previniendo el análisis automatizado o bloqueo de archivos por proveedores externos de almacenamiento.
 
+## 📂 Arquitectura de Archivos Sugerida
 
-Network & Docker Maestro (Bash): Desarrollé un demonio en Bash que lee el estado físico del hardware (/sys/class/net/eth0/carrier). Si detecta conexión RJ45 local, asigna IPs estáticas vía nmcli, levanta toda la flota de contenedores y monta unidades criptográficas (Rclone). Si detecta un estado "nómada" (solo WiFi o desconectado), cambia a DHCP e hiberna los contenedores no críticos para ahorrar batería de la UPS.
-
-
-Activación por Red (Socket Activation): Los servicios inactivos se suspenden y solo se levantan mediante disparadores de red cuando hay una petición entrante, reduciendo drásticamente el overhead en la memoria RAM.
-
-
-Backups Automatizados (CI/CD Local): Scripts nocturnos rastrean cambios en las configuraciones críticas y realizan git push silenciosos a repositorios privados, asegurando que la infraestructura sea 100% replicable en caso de falla catastrófica.
-
-
-Ciberseguridad y Redes Zero-Trust
-La seguridad perimetral es estricta para proteger desde bóvedas de credenciales hasta la telemetría del robot "Robert".
-
-Conectividad sin Port-Forwarding: Implementación de Tailscale y VPNs privadas. El servidor es accesible globalmente, pero invisible para escaneos de puertos públicos.
-
-Almacenamiento Criptográfico al Vuelo: Sincronización de contenido a la nube con encriptación en tiempo real, previniendo análisis automatizados y bloqueos por parte de proveedores externos.
+```text
+├── 📁 docker/               # Docker Compose y archivos .env por servicio
+│   ├── docker-compose.yml   # Orquestador principal de los +30 contenedores
+│   └── 📁 configs/          # Volúmenes de Home Assistant, Pi-hole, Nextcloud, etc.
+├── 📁 scripts/              # Automatización nativa
+│   ├── network-daemon.sh    # Demonio de monitoreo de red /sys/ y nmcli
+│   └── backup-nightly.sh    # Script de git automático y Rclone criptográfico
+├── 📁 CAD/                  # Modelos paramétricos 3D (.STEP / .3MF)
+└── 📄 README.md             # Documentación principal del sistema
